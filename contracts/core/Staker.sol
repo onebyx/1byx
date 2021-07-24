@@ -49,7 +49,7 @@ contract Staker is Ownable{
         require(balance > 0, "staking balance cannot be 0");
 
         // Transfer ONX tokens Back to the user
-        daiToken.transfer(msg.sender, balance);
+        ONX.transfer(msg.sender, balance);
 
         // Reset staking balance
         stakingBalance[msg.sender] = 0;
