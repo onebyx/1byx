@@ -9,6 +9,8 @@ contract Synth is Ownable, ERC20 {
     // Currency key which identifies this Synth to the Synthetix system
     bytes32 public currencyKey;
     uint8 public constant DECIMALS = 18;
+    string public baseSymbol;
+    string public oracleSymbol;
 
     // todo add fee pool, exchanger, staker address 
 
@@ -17,13 +19,17 @@ contract Synth is Ownable, ERC20 {
     constructor(
         string memory _tokenName,
         string memory _tokenSymbol,
+        string memory _baseSymbol,
+        string memory _oracleSymbol,
         uint _totalSupply,
         IAssetTracker _AssetTracker
     )
         public
         ERC20(_tokenName, _tokenSymbol )
         Ownable(){
-            _AssetTracker.add_asset(_tokenSymbol,address(this));
+            _AssetTracker.add_asset(_tokenSymbol,address(this),_baseSymbol,_oracleSymbol);
+            baseSymbol = _baseSymbol;
+            oracleSymbol = _oracleSymbol;
         }
 
     function issue(address account, uint amount) external onlyInternalContracts {
