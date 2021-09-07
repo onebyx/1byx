@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-
-
 pragma solidity ^0.8.0;
 
 
@@ -21,6 +19,8 @@ contract Staker is Ownable{
     ISynth public sUSD;
     IPriceFeed public pf;
     IAssetTracker public at;
+    // todo fetch price feed via dex
+    uint public _price = 2;
 
     constructor(IERC20 _ONX,IPriceFeed _pf, IAssetTracker _at) public Ownable(){
         ONX = _ONX;
@@ -48,34 +48,38 @@ contract Staker is Ownable{
         hasStaked[msg.sender] = true;
         totalstaked += _amount;
         // mint susd
-        // todo add address check
         sUSD = ISynth(at.get_asset("sUSD"));
-        // todo fetch price feed
         // mint it
-        sUSD.issue(msg.sender,10);
+        sUSD.issue(msg.sender,_amount/_price);
 
     }
 
     // Unstaking Tokens 
-    function unstakeTokens() public {
-        // todo burn synth token
-
+    function unstakeTokens(uint _amount) public {
+        // Require amount greater than 0
+        require(_amount > 0, "amount cannot be 0");
 
         // Fetch staking balance
         uint balance = stakingBalance[msg.sender];
 
         // Require amount greater than 0
         require(balance > 0, "staking balance cannot be 0");
-
+        require(_amount <= balance, "amount cannot be greater than balance");
+        
+        sUSD = ISynth(at.get_asset("sUSD"));
+        // burn sUSD
+        sUSD.burn(msg.sender,_amount/_price);
         // Transfer ONX tokens Back to the user
-        ONX.transfer(msg.sender, balance);
+        ONX.transfer(msg.sender, _amount);
 
         // Reset staking balance
-        stakingBalance[msg.sender] = 0;
+        stakingBalance[msg.sender] = balance-_amount;
 
         // Update staking status
-        isStaking[msg.sender] = false;
-        totalstaked -= balance;
+        if(stakingBalance[msg.sender]==0){
+            isStaking[msg.sender] = false;
+        }
+        totalstaked -= _amount;
     }
 
 }
